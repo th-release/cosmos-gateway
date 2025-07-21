@@ -1,0 +1,14 @@
+services:
+  gateway:
+    image: gateway:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      PORT: 4000
+      RPC_ENDPOINT: "http://0.0.0.0:26657"
+      ADDRESS_PREFIX: "cosmos"
+      DENOM: "stake"
+      GAS_FEE: "0.025stake"

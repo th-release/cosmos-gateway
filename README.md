@@ -1,22 +1,30 @@
 # cosmos-gateway
 
+# How to Start?
+
+0. docker build
+    * `docker build -t gateway:latest .`
+
+1. docker start
+    * `docker compose up -d`
+
 # How to Use?
 
-1. buf install --> https://buf.build/docs/cli/quickstart/ <--
+0. buf install --> https://buf.build/docs/cli/quickstart/ <--
 
-2. buf generate
+1. buf generate
 
 ```sh
 buf generate --template ${cosmos}/proto/buf.gen.ts.yaml --output ${cosmos_gateway}/src/proto
 ```
 
-3. create service
+2. create service
 
 ```ts
 export class ExampleService {}
 ```
 
-4. Create Registry
+3. Create Registry
 ```ts
 import { Registry } from "@cosmjs/proto-signing";
 import { createProtobufRpcClient, ProtobufRpcClient, QueryClient, StargateClient } from "@cosmjs/stargate";
@@ -49,7 +57,7 @@ export class ExampleService {
 }
 ```
 
-5. Create Query & Message
+4. Create Query & Message
 
 ```ts
 import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet, Registry } from "@cosmjs/proto-signing";

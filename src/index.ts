@@ -4,6 +4,17 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import 'dotenv/config';
 import App from './app';
+import { databaseLoader } from './utils/db-loader';
+
+databaseLoader
+  .initialize()
+  .then(() => {
+    console.log("Database Load.")
+  })
+  .catch((err) => {
+    console.error("Database Load Error: ", err)
+    return process.exit(1);
+  })
 
 const app = express();
 

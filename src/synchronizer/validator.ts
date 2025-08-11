@@ -32,6 +32,8 @@ export class Validator {
                 entity.proposerPriority = d.proposerPriority ? d.proposerPriority : undefined
                 entity.pubkey = JSON.stringify(d.pubkey)
                 this.repository.save(entity)
+
+                console.log(`Validator SYNC : ${JSON.stringify(entity)}`)
             }
         })
     }

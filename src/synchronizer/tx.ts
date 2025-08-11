@@ -8,10 +8,10 @@ import { sha256 } from '@cosmjs/crypto';
 import { uint8ArrayToHex } from "./utils";
 
 export class Transaction {
-    private repository: Repository<TransactionEntity> = databaseLoader.getRepository(TransactionEntity);
+    public repository: Repository<TransactionEntity> = databaseLoader.getRepository(TransactionEntity);
 
-    public async save(entity: TransactionEntity): Promise<TransactionEntity> {
-        return await this.repository.save(entity)
+    public async save(entity: TransactionEntity | TransactionEntity[]): Promise<TransactionEntity | TransactionEntity[]> {
+        return await this.repository.save(entity as any)
     }
 
     public async deleteAll() {

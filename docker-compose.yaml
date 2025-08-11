@@ -8,7 +8,16 @@ services:
       - /app/node_modules
     environment:
       PORT: 4000
-      RPC_ENDPOINT: "http://0.0.0.0:26657"
+      RPC_ENDPOINT: "https://cosmos-rpc.publicnode.com:443"
       ADDRESS_PREFIX: "cosmos"
       DENOM: "stake"
       GAS_FEE: "0.025stake"
+      USED_SYNCHRONIZER: "true"
+      SYNC_MS: 250
+      DATABASE_HOST: "192.168.194.22"
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: "root"
+      DATABASE_PASSWORD: "xogur38997"
+      DATABASE_SCHEMA: "cosmos"
+      DATABASE_LOGGING: "false"
+      DATABASE_SYNCHRONIZE: "true"

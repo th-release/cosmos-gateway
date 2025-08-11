@@ -1,4 +1,4 @@
-import { AuthInfo, Fee, ModeInfo, SignerInfo, Tip, TxBody } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import { Fee, ModeInfo, Tip } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 
 export interface JsonRpcResponse<T = any> {
     jsonrpc: string;

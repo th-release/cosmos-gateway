@@ -34,16 +34,18 @@ export class Block {
             const searchBlock = await (await this.client).block(+search[0].height).catch(() => undefined)
 
             if (!searchBlock || uint8ArrayToHex(searchBlock.blockId.hash) != search[0].blockIdHash) {
-                const isDeleted = this.repository.deleteAll().catch(() => undefined);
+                const isDeletedBlock = this.repository.deleteAll().catch(() => undefined);
+                const isDeletedTx = this.transaction.deleteAll().catch(() => undefined)
 
-                if (!isDeleted) {
+                if (!isDeletedBlock || isDeletedTx) {
                     return;
                 }
             }
         }
         
         let block = await (await this.client).block(1).catch((err) => {return {success: false, message: err.message}}) as any
-        if (!(block as {success: boolean, message: string}).success) {
+
+        if ((block as {success: boolean, message: string}).success == false) {
             const match = (block as {success: boolean, message: string}).message.match(/lowest height is (\d+)/);
             if (match) {
                 block = await (await this.client).block(Number(match[1]) ? Number(match[1]) : 1).catch(() => undefined)
@@ -75,8 +77,8 @@ export class Block {
             const signatures = block.block.lastCommit?.signatures || [] as any[]
             if (signatures.length != 0) {
                 signatures.forEach((element) => {
-                    element.validatorAddress = uint8ArrayToHex(element.validatorAddress)
-                    element.signature = uint8ArrayToHex(element.signature)
+                    element.validatorAddress = element.validatorAddress
+                    element.signature = element.signature
                 });
             }
             this.last.signatures = this.safeJSONStringify(signatures || []);

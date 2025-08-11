@@ -9,32 +9,80 @@ export class Validator {
     private repository: Repository<ValidatorEntity> = databaseLoader.getRepository(ValidatorEntity);
 
     public async syncValidators(): Promise<void> {
-        const validators = await (await this.client).validatorsAll().catch(() => undefined)
+        const validators = await (await this.client).validatorsAll().catch(() => undefined);
         if (!validators) {
             return;
         }
 
-        const all = await this.repository.find({})
+        const dbValidators = await this.repository.find({});
+        const blockchainValidatorAddresses = new Set(
+            validators.validators.map(v => uint8ArrayToHex(v.address))
+        );
+        
+        const addedValidators: ValidatorEntity[] = [];
+        validators.validators.forEach((blockchainValidator) => {
+            const address = uint8ArrayToHex(blockchainValidator.address);
+            const existsInDb = dbValidators.some(dbValidator => dbValidator.address === address);
 
-        validators.validators.forEach((d) => {
-            let find = false
-            all.forEach((v) => {
-                if (uint8ArrayToHex(d.address) == v.address) {
-                    find = true 
-                }
-            })
-
-            if (find == false) {
-                const entity = new ValidatorEntity()
-
-                entity.address = uint8ArrayToHex(d.address)
-                entity.votingPower = Number(d.votingPower)
-                entity.proposerPriority = d.proposerPriority ? d.proposerPriority : undefined
-                entity.pubkey = JSON.stringify(d.pubkey)
-                this.repository.save(entity)
-
-                console.log(`Validator SYNC : ${JSON.stringify(entity)}`)
+            if (!existsInDb) {
+                const entity = new ValidatorEntity();
+                entity.address = address;
+                entity.votingPower = Number(blockchainValidator.votingPower);
+                entity.proposerPriority = blockchainValidator.proposerPriority || undefined;
+                entity.pubkey = JSON.stringify(blockchainValidator.pubkey);
+                
+                addedValidators.push(entity);
             }
-        })
+        });
+
+        const removedValidators = dbValidators.filter(
+            dbValidator => !blockchainValidatorAddresses.has(dbValidator.address)
+        );
+
+        const updatedValidators: ValidatorEntity[] = [];
+        validators.validators.forEach((blockchainValidator) => {
+            const address = uint8ArrayToHex(blockchainValidator.address);
+            const dbValidator = dbValidators.find(v => v.address === address);
+
+            if (dbValidator) {
+                const newVotingPower = Number(blockchainValidator.votingPower);
+                const newProposerPriority = blockchainValidator.proposerPriority || undefined;
+                const newPubkey = JSON.stringify(blockchainValidator.pubkey);
+
+                if (dbValidator.votingPower !== newVotingPower || 
+                    dbValidator.proposerPriority !== newProposerPriority ||
+                    dbValidator.pubkey !== newPubkey) {
+                    
+                    dbValidator.votingPower = newVotingPower;
+                    dbValidator.proposerPriority = newProposerPriority;
+                    dbValidator.pubkey = newPubkey;
+                    
+                    updatedValidators.push(dbValidator);
+                }
+            }
+        });
+
+        try {
+            if (addedValidators.length > 0) {
+                await this.repository.save(addedValidators);
+                addedValidators.forEach(v => console.log(`Validator SYNC : ${v.address}`));
+            }
+
+            if (removedValidators.length > 0) {
+                await this.repository.remove(removedValidators);
+                removedValidators.forEach(v => console.log(`Validator SYNC : ${v.address}`));
+            }
+
+            if (updatedValidators.length > 0) {
+                await this.repository.save(updatedValidators);
+                updatedValidators.forEach(v => console.log(`Validator SYNC : ${v.address}`));
+            }
+
+        } catch (error) {
+            console.error('Error during validator sync:', error);
+            throw error;
+        }
     }
+
+
 }

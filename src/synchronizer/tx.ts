@@ -1,6 +1,5 @@
 import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
 import { CosmosTransaction } from "./types";
-import { fromUtf8 } from "@cosmjs/encoding";
 import { Repository } from "typeorm";
 import { TransactionEntity } from "src/entities/transaction.entity";
 import { databaseLoader } from "src/utils/db-loader";
@@ -13,6 +12,10 @@ export class Transaction {
 
     public async save(entity: TransactionEntity): Promise<TransactionEntity> {
         return await this.repository.save(entity)
+    }
+
+    public async deleteAll() {
+        return await this.repository.deleteAll()
     }
 
     public decodeCosmosTransaction(data: Uint8Array<ArrayBufferLike>): CosmosTransaction {

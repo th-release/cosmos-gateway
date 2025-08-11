@@ -5,16 +5,19 @@ import cors from 'cors';
 import 'dotenv/config';
 import App from './app';
 import { databaseLoader } from './utils/db-loader';
+import { env } from 'process';
 
-databaseLoader
-  .initialize()
-  .then(() => {
-    console.log("Database Load.")
-  })
-  .catch((err) => {
-    console.error("Database Load Error: ", err)
-    return process.exit(1);
-  })
+if (env.USED_SYNCHRONIZER.toLowerCase() == "true") {
+  databaseLoader
+    .initialize()
+    .then(() => {
+      console.log("Database Load.")
+    })
+    .catch((err) => {
+      console.error("Database Load Error: ", err)
+      return process.exit(1);
+    })
+}
 
 const app = express();
 

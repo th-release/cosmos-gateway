@@ -37,17 +37,19 @@ export default class App {
   }
 
   private async synchronizerInit(): Promise<void> {
-    try {
-      const sync = Interval(async () => {
-        await this.abci.syncAbci()
-        await this.block.syncBlock()
-        await this.validator.syncValidators()
-      }, +env.SYNC_MS)
-    } catch (err) {
-      console.error('synchronizer Init Error:' + err)
+    if (env.USED_SYNCHRONIZER.toLowerCase() == "true") {
+      try {
+        const sync = Interval(async () => {
+          await this.abci.syncAbci()
+          await this.block.syncBlock()
+          await this.validator.syncValidators()
+        }, +env.SYNC_MS)
+      } catch (err) {
+        console.error('synchronizer Init Error:' + err)
+      }
+  
+      console.log("synchronizer Init Success");
     }
-
-    console.log("synchronizer Init Success");
   }
 
   private start(): void {

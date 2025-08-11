@@ -40,8 +40,15 @@ export class Block {
                 }
             }
         }
+        
+        let block = await (await this.client).block(1).catch((err) => {return {success: false, message: err.message}}) as any
+        if (!(block as {success: boolean, message: string}).success) {
+            const match = (block as {success: boolean, message: string}).message.match(/lowest height is (\d+)/);
+            if (match) {
+                block = await (await this.client).block(Number(match[1]) ? Number(match[1]) : 1).catch(() => undefined)
+            }
+        }
 
-        let block = await (await this.client).block(1).catch(() => undefined)
         if (!this.last || this.last == undefined) {
             if (search && search.length != 0) {
                 block = await (await this.client).block(+search[0].height).catch(() => undefined)
@@ -109,8 +116,8 @@ export class Block {
             const signatures = block.block.lastCommit?.signatures || [] as {blockIdFlag: number, validatorAddress: string | any}[]
             if (signatures.length != 0) {
                 signatures.forEach(element => {
-                    element.validatorAddress = uint8ArrayToHex(element.validatorAddress)
-                    element.signature = uint8ArrayToHex(element.signature)
+                    element.validatorAddress = element.validatorAddress
+                    element.signature = element.signature
                 });
             }
 

@@ -20,11 +20,6 @@ export class Transaction {
             const hash = toHex(sha256(data))
 
             const decodedTx: DecodedTxRaw = decodeTxRaw(data);
-            
-            const messages = decodedTx.body.messages.map(msg => ({
-                typeUrl: msg.typeUrl,
-                value: fromUtf8(msg.value),
-            }));
 
             const signerInfo = decodedTx.authInfo.signerInfos.map((v, _) => {
                 return {
@@ -49,7 +44,7 @@ export class Transaction {
                 body: {
                     extensionOptions: decodedTx.body.extensionOptions,
                     memo: decodedTx.body.memo,
-                    messages: messages,
+                    messages: decodedTx.body.messages as any[],
                     nonCriticalExtensionOptions: decodedTx.body.nonCriticalExtensionOptions,
                     timeoutHeight: decodedTx.body.timeoutHeight
                 },

@@ -95,7 +95,7 @@ export interface CosmosTransaction {
     body: {
         messages: {
             typeUrl: string;
-            value: string;
+            value: any[];
         }[]
         memo: string;
         timeoutHeight: bigint;

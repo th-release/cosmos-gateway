@@ -4,7 +4,7 @@ import { databaseLoader } from "src/utils/db-loader";
 import { Repository } from "typeorm";
 import { uint8ArrayToHex } from "./utils";
 
-export class Node {
+export class Validator {
     private client = Tendermint34Client.connect(process.env.RPC_ENDPOINT || "http://localhost:26657");
     private repository: Repository<ValidatorEntity> = databaseLoader.getRepository(ValidatorEntity);
 

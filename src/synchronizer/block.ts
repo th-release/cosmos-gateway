@@ -31,8 +31,9 @@ export class Block {
         })
 
         if (search && search.length != 0) {
-            const searchBlock = await (await this.client).block(+search[0].height)
-            if (uint8ArrayToHex(searchBlock.blockId.hash) != search[0].blockIdHash) {
+            const searchBlock = await (await this.client).block(+search[0].height).catch(() => undefined)
+
+            if (!searchBlock || uint8ArrayToHex(searchBlock.blockId.hash) != search[0].blockIdHash) {
                 const isDeleted = this.repository.deleteAll().catch(() => undefined);
 
                 if (!isDeleted) {

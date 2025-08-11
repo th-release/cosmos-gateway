@@ -5,8 +5,10 @@ export interface BlockchainResponse {
     blocks: BlockResponse[];
 }
 
+import { config } from "../utils/config";
+
 export class BlockchainService {
-  private client = Tendermint34Client.connect(process.env.RPC_ENDPOINT || "http://localhost:26657");
+  private client = Tendermint34Client.connect(config.rpcEndpoint);
 
   public async blockchain(minHeight?: number, maxHeight?: number): Promise<BlockchainResponse> {
       const client = await this.client;

@@ -3,14 +3,18 @@ import { ValidatorEntity } from "src/entities/validator.entity";
 import { databaseLoader } from "src/utils/db-loader";
 import { Repository } from "typeorm";
 import { uint8ArrayToHex } from "./utils";
+import { config } from "../utils/config";
+import { canonicalJsonStringify } from "../utils/json";
 
 export class Validator {
-    private client = Tendermint34Client.connect(process.env.RPC_ENDPOINT || "http://localhost:26657");
+    private client = Tendermint34Client.connect(config.rpcEndpoint);
     private repository: Repository<ValidatorEntity> = databaseLoader.getRepository(ValidatorEntity);
+    private hasLoggedUpToDate = false;
 
     public async syncValidators(): Promise<void> {
         const validators = await (await this.client).validatorsAll().catch(() => undefined);
         if (!validators) {
+            this.hasLoggedUpToDate = false;
             return;
         }
 
@@ -47,38 +51,58 @@ export class Validator {
             if (dbValidator) {
                 const newVotingPower = Number(blockchainValidator.votingPower);
                 const newProposerPriority = blockchainValidator.proposerPriority || undefined;
-                const newPubkey = JSON.stringify(blockchainValidator.pubkey);
 
-                if (dbValidator.votingPower !== newVotingPower || 
-                    dbValidator.proposerPriority !== newProposerPriority ||
-                    dbValidator.pubkey !== newPubkey) {
+                let dbPubkeyObject;
+                try {
+                    dbPubkeyObject = JSON.parse(dbValidator.pubkey);
+                } catch (e) {
+                    console.error("Error parsing dbValidator.pubkey:", e);
+                    dbPubkeyObject = {};
+                }
+
+                const pubkeysAreEqual = canonicalJsonStringify(dbPubkeyObject) === canonicalJsonStringify(blockchainValidator.pubkey);
+
+                if (dbValidator.votingPower != newVotingPower || 
+                    dbValidator.proposerPriority != newProposerPriority ||
+                    !pubkeysAreEqual) {
                     
                     dbValidator.votingPower = newVotingPower;
                     dbValidator.proposerPriority = newProposerPriority;
-                    dbValidator.pubkey = newPubkey;
+                    dbValidator.pubkey = JSON.stringify(blockchainValidator.pubkey);
                     
                     updatedValidators.push(dbValidator);
                 }
             }
         });
 
+        const hasChanges = addedValidators.length > 0 || removedValidators.length > 0 || updatedValidators.length > 0;
+
         try {
-            if (addedValidators.length > 0) {
-                await this.repository.save(addedValidators);
-                addedValidators.forEach(v => console.log(`Validator SYNC : ${v.address}`));
-            }
+            if (hasChanges) {
+                this.hasLoggedUpToDate = false;
 
-            if (removedValidators.length > 0) {
-                await this.repository.remove(removedValidators);
-                removedValidators.forEach(v => console.log(`Validator SYNC : ${v.address}`));
-            }
+                if (addedValidators.length > 0) {
+                    await this.repository.save(addedValidators);
+                    addedValidators.forEach(v => console.log(`Validator SYNC : Added ${v.address}`));
+                }
 
-            if (updatedValidators.length > 0) {
-                await this.repository.save(updatedValidators);
-                updatedValidators.forEach(v => console.log(`Validator SYNC : ${v.address}`));
-            }
+                if (removedValidators.length > 0) {
+                    await this.repository.remove(removedValidators);
+                    removedValidators.forEach(v => console.log(`Validator SYNC : Removed ${v.address}`));
+                }
 
+                if (updatedValidators.length > 0) {
+                    await this.repository.save(updatedValidators);
+                    updatedValidators.forEach(v => console.log(`Validator SYNC : Updated ${v.address}`));
+                }
+            } else {
+                if (!this.hasLoggedUpToDate) {
+                    console.log("Validator data is already up-to-date. Skipping synchronization.");
+                    this.hasLoggedUpToDate = true;
+                }
+            }
         } catch (error) {
+            this.hasLoggedUpToDate = false;
             console.error('Error during validator sync:', error);
             throw error;
         }

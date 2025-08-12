@@ -1,19 +1,19 @@
 import { Column, Entity, PrimaryColumn, OneToMany, Index } from "typeorm";
 
 @Entity({name: "block"})
-@Index("IDX_BLOCKS_HEIGHT", ["height"]) // 높이로 빠른 검색을 위한 인덱스
+@Index("IDX_BLOCKS_HEIGHT", ["height"])
 export class BlockEntity {
     @PrimaryColumn({ name: "block_id_hash", nullable: false })
     blockIdHash: string;
 
-    @Column({ name: "chain_id", nullable: false }) // "chain-id" 대신 "chain_id" 사용 (하이픈 문제 방지)
+    @Column({ name: "chain_id", nullable: false })
     chainId: string
 
-    @Column({ type: "bigint", name: "height", nullable: false, unique: true }) // 높이도 유니크해야 함
+    @Column({ type: "bigint", name: "height", nullable: false, unique: true })
     height: number;
 
     @Column({ type: "bigint", name: "round", nullable: true })
-    round: number | null; // nullable이므로 null 타입 명시
+    round: number | null;
 
     @Column({ name:"last_commit_hash", type: "varchar", nullable: true })
     lastCommitHash: string | null;
